@@ -1,4 +1,9 @@
 import * as THREE from "three";
+import {
+  CSS3DRenderer,
+  CSS3DObject,
+} from "three/addons/renderers/CSS3DRenderer.js";
+import { Cube } from "./objects/cube/cube.ts";
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(
@@ -8,58 +13,52 @@ const camera = new THREE.PerspectiveCamera(
   1000,
 );
 
-const renderer = new THREE.WebGLRenderer();
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
+const sceneRenderer = new THREE.WebGLRenderer();
+sceneRenderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(sceneRenderer.domElement);
 
-// const textureLoader = new THREE.TextureLoader();
-// function loadColorTexture(path: string) {
-//   const texture = textureLoader.load(path);
-//   texture.colorSpace = THREE.SRGBColorSpace;
-//   return texture;
-// }
-// const materials = [
-// new THREE.MeshBasicMaterial({
-//   map: loadColorTexture("assets/img/flower/flower-1.jpg"),
-// }),
-// new THREE.MeshBasicMaterial({
-//   map: loadColorTexture("assets/img/flower/flower-2.jpg"),
-// }),
-// new THREE.MeshBasicMaterial({
-//   map: loadColorTexture("assets/img/flower/flower-3.jpg"),
-// }),
-// new THREE.MeshBasicMaterial({
-//   map: loadColorTexture("assets/img/flower/flower-4.jpg"),
-// }),
-// new THREE.MeshBasicMaterial({
-//   map: loadColorTexture("assets/img/flower/flower-5.jpg"),
-// }),
-// new THREE.MeshBasicMaterial({
-//   map: loadColorTexture("assets/img/flower/flower-6.jpg"),
-// }),
-//];
-
-const materials = [
-  new THREE.MeshBasicMaterial({ color: 0xff0000 }),
-  new THREE.MeshBasicMaterial({ color: 0x00ff00 }),
-  new THREE.MeshBasicMaterial({ color: 0x0000ff }),
-  new THREE.MeshBasicMaterial({ color: 0xffff00 }),
-  new THREE.MeshBasicMaterial({ color: 0x00ffff }),
-  new THREE.MeshBasicMaterial({ color: 0xff00ff }),
-];
-
-const geometry = new THREE.BoxGeometry(1, 1, 1);
-const cube = new THREE.Mesh(geometry, materials);
+const cube = Cube.createDebugCube();
 scene.add(cube);
 
 camera.position.z = 5;
 
-function animate(time: number) {
-  cube.rotation.x = time / 2000;
-  cube.rotation.y = time / 1000;
-  renderer.render(scene, camera);
+const textRenderer = new CSS3DRenderer();
+textRenderer.setSize(window.innerWidth, window.innerHeight);
+textRenderer.domElement.style.position = "absolute";
+textRenderer.domElement.style.top = "0px";
+document.body.appendChild(textRenderer.domElement);
+
+const pos = new THREE.Vector3(0.5, 0, 0);
+const normal = new THREE.Vector3(1, 0, 0);
+
+const cNormal = new THREE.Vector3();
+const cPos = new THREE.Vector3();
+const m4 = new THREE.Matrix4();
+
+const div = document.createElement("div");
+div.className = "label";
+div.textContent = "Red";
+const label = new CSS3DObject(div);
+label.position.copy(pos);
+label.rotation.y = Math.PI * 0.5;
+label.scale.set(0.015, 0.015, 1);
+cube.add(label);
+
+function animate() {
+  cNormal.copy(normal).applyMatrix3(cube.normalMatrix);
+  cPos
+    .copy(pos)
+    .applyMatrix4(
+      m4.multiplyMatrices(camera.matrixWorldInverse, cube.matrixWorld),
+    );
+  const d = cPos.negate().dot(cNormal);
+
+  div.style.visibility = d < 0 ? "hidden" : "visible";
+
+  sceneRenderer.render(scene, camera);
+  textRenderer.render(scene, camera);
 }
-renderer.setAnimationLoop(animate);
+sceneRenderer.setAnimationLoop(animate);
 
 window.addEventListener("resize", onWindowResize, false);
 
@@ -67,5 +66,5 @@ function onWindowResize() {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
 
-  renderer.setSize(window.innerWidth, window.innerHeight);
+  sceneRenderer.setSize(window.innerWidth, window.innerHeight);
 }
