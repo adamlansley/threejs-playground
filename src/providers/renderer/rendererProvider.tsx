@@ -1,13 +1,40 @@
 import {
   PropsWithChildren,
+  Reducer,
   useCallback,
   useEffect,
   useMemo,
+  useReducer,
   useRef,
 } from "react";
 
 import * as THREE from "three";
 import { RendererContext } from "@/providers/renderer/rendererContext.ts";
+
+export type AnimateReducerActions =
+  | {
+      type: "add";
+      callback: XRFrameRequestCallback;
+    }
+  | {
+      type: "remove";
+      callback: XRFrameRequestCallback;
+    };
+
+const animationReducer: Reducer<
+  XRFrameRequestCallback[],
+  AnimateReducerActions
+> = (state, action) => {
+  if (action.type === "add") {
+    return [...state, action.callback];
+  }
+
+  if (action.type === "remove") {
+    return [...state.filter((callback) => callback !== action.callback)];
+  }
+
+  throw new Error(`Unknown animation reducer action ${action}`);
+};
 
 type RendererProviderProps = PropsWithChildren;
 
@@ -27,18 +54,25 @@ export function RendererProvider({ children }: RendererProviderProps) {
     [],
   );
 
+  const [animateCallbacks, animations] = useReducer(animationReducer, []);
+
   const value = useMemo(
     () => ({
       scene,
       camera,
       sceneRenderer,
+      animations,
     }),
     [scene, camera, sceneRenderer],
   );
 
-  const onAnimate = useCallback(() => {
-    sceneRenderer.render(scene, camera);
-  }, [sceneRenderer, scene, camera]);
+  const onAnimate = useCallback(
+    (time: DOMHighResTimeStamp, frame: XRFrame) => {
+      animateCallbacks.forEach((callback) => callback(time, frame));
+      sceneRenderer.render(scene, camera);
+    },
+    [animateCallbacks, sceneRenderer, scene, camera],
+  );
 
   useEffect(() => {
     if (!threejsContainer.current) {

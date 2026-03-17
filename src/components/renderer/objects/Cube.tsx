@@ -2,31 +2,36 @@ import {
   CubeDefinition,
   CubeDefinitionOptions,
 } from "@/threejs/objects/cube/cubeDefinition.ts";
-import { useEffect, useMemo, useRef } from "react";
+import { PropsWithChildren, useEffect, useMemo } from "react";
 import { useRenderer } from "@/providers/renderer/useRenderer.ts";
 import * as THREE from "three";
 import { COLOUR_MATERIALS } from "@/threejs/materials/colours.ts";
+import { MeshProvider } from "@/providers/mesh/meshProvider.tsx";
 
-type CubeProps = CubeDefinitionOptions;
+type CubeProps = CubeDefinitionOptions & PropsWithChildren;
 
-export const Cube = ({ geometry, material }: CubeProps) => {
-  const cubeDefinition = useRef(new CubeDefinition({ geometry, material }));
+export const Cube = ({ geometry, material, children }: CubeProps) => {
+  const cubeDefinition = useMemo(
+    () => new CubeDefinition({ geometry, material }),
+    [geometry, material],
+  );
 
   const { scene } = useRenderer();
 
   useEffect(() => {
-    const scopedCubeDefinition = cubeDefinition.current;
-    scene.add(scopedCubeDefinition);
+    scene.add(cubeDefinition);
 
     return () => {
-      scene.remove(scopedCubeDefinition);
+      scene.remove(cubeDefinition);
     };
-  }, [scene]);
+  }, [cubeDefinition, scene]);
 
-  return <div />;
+  return <MeshProvider mesh={cubeDefinition}>{children}</MeshProvider>;
 };
 
-export const DebugCube = () => {
+type DebugCubeProps = Omit<CubeProps, "geometry" | "material">;
+
+export const DebugCube = (props: DebugCubeProps) => {
   const geometry = useMemo(() => new THREE.BoxGeometry(1, 1, 1), []);
   const material = useMemo(
     () => [
@@ -40,5 +45,5 @@ export const DebugCube = () => {
     [],
   );
 
-  return <Cube geometry={geometry} material={material} />;
+  return <Cube geometry={geometry} material={material} {...props} />;
 };
