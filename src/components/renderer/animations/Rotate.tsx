@@ -3,28 +3,28 @@ import { useCallback, useEffect } from "react";
 import { useRenderer } from "@/providers/renderer/useRenderer.ts";
 
 type RotateProps = {
-  x?: number;
-  y?: number;
-  z?: number;
+  pitch?: number;
+  yaw?: number;
+  roll?: number;
 };
 
-export const Rotate = ({ x, y, z }: RotateProps) => {
+export const Rotate = ({ pitch, yaw, roll }: RotateProps) => {
   const { mesh } = useMesh();
   const { animations } = useRenderer();
 
   const onAnimate: XRFrameRequestCallback = useCallback(() => {
-    if (x) {
-      mesh.rotateY(-x);
+    if (pitch) {
+      mesh.rotateX(pitch);
     }
 
-    if (y) {
-      mesh.rotateX(y);
+    if (yaw) {
+      mesh.rotateY(-yaw);
     }
 
-    if (z) {
-      mesh.rotateZ(z);
+    if (roll) {
+      mesh.rotateZ(-roll);
     }
-  }, [mesh, x, y, z]);
+  }, [mesh, pitch, roll, yaw]);
 
   useEffect(() => {
     animations({ type: "add", callback: onAnimate });

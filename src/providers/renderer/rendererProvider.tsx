@@ -42,7 +42,10 @@ export function RendererProvider({ children }: RendererProviderProps) {
   const threejsContainer = useRef<HTMLDivElement | null>(null);
 
   const scene = useMemo(() => new THREE.Scene(), []);
-  const sceneRenderer = useMemo(() => new THREE.WebGLRenderer(), []);
+  const sceneRenderer = useMemo(
+    () => new THREE.WebGLRenderer({ antialias: true }),
+    [],
+  );
   const camera = useMemo(
     () =>
       new THREE.PerspectiveCamera(

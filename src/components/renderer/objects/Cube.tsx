@@ -8,7 +8,12 @@ import * as THREE from "three";
 import { COLOUR_MATERIALS } from "@/threejs/materials/colours.ts";
 import { MeshProvider } from "@/providers/mesh/meshProvider.tsx";
 
-type CubeProps = CubeDefinitionOptions & PropsWithChildren;
+type CubeProps = {
+  pitch?: number;
+  yaw?: number;
+  roll?: number;
+} & CubeDefinitionOptions &
+  PropsWithChildren;
 
 export const Cube = ({ geometry, material, children }: CubeProps) => {
   const cubeDefinition = useMemo(
