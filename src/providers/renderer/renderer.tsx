@@ -70,11 +70,11 @@ export function RendererProvider({ children }: RendererProviderProps) {
       container.removeChild(sceneRenderer.domElement);
       resizeObserver.disconnect();
     };
-  }, [onAnimate, threejsContainer, sceneRenderer, camera]);
+  }, [onAnimate, threejsContainer, sceneRenderer, camera, scene]);
 
   return (
     <RendererContext.Provider value={value}>
-      <div className="renderer" ref={threejsContainer}>
+      <div className="flex flex-1 max-w-full" ref={threejsContainer}>
         {children}
       </div>
       {children}
